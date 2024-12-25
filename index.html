@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Frisbee Team Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        form {
+            margin-bottom: 20px;
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        input, button, select {
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 1rem;
+            width: 100%;
+        }
+        .stats {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .stats th, .stats td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .stats th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        .timer {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .message {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ultimate Frisbee Team Tracker</h1>
+    <div class="container">
+        <div class="timer">
+            <h2>Match Timer</h2>
+            <p id="match-time">00:00</p>
+            <button id="start-button">Start</button>
+            <button id="pause-button">Pause</button>
+            <p>Pause Count: <span id="pause-count">0</span></p>
+        </div>
+
+        <form id="player-form">
+            <h2>Player Data</h2>
+            <label for="player-name">Player Name:</label>
+            <input type="text" id="player-name" name="player-name" required>
+
+            <label for="player-number">Player Number:</label>
+            <input type="number" id="player-number" name="player-number" required>
+
+            <label for="play-time">Play Time (minutes):</label>
+            <input type="number" id="play-time" name="play-time" required>
+
+            <label for="score">Score:</label>
+            <input type="number" id="score" name="score">
+
+            <label for="assist">Assist:</label>
+            <input type="number" id="assist" name="assist">
+
+            <label for="intercept">Intercept:</label>
+            <input type="number" id="intercept" name="intercept">
+
+            <label for="turnover">Turnover:</label>
+            <input type="number" id="turnover" name="turnover">
+
+            <label for="turnover-non">Turnover (Non):</label>
+            <input type="number" id="turnover-non" name="turnover-non">
+
+            <label for="drop">Drop:</label>
+            <input type="number" id="drop" name="drop">
+
+            <label for="drop-non">Drop (Non):</label>
+            <input type="number" id="drop-non" name="drop-non">
+
+            <button type="submit">Submit Player Data</button>
+        </form>
+
+        <p class="message" id="message"></p>
+
+        <table class="stats">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Number</th>
+                    <th>Play Count</th>
+                    <th>Total Play Time</th>
+                    <th>Score</th>
+                    <th>Assist</th>
+                    <th>Intercept</th>
+                    <th>Turnover</th>
+                    <th>Turnover (Non)</th>
+                    <th>Drop</th>
+                    <th>Drop (Non)</th>
+                </tr>
+            </thead>
+            <tbody id="player-stats">
+                <!-- Dynamic rows will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL'; // Replace with your Apps Script URL
+
+        // Timer functionality
+        let matchTime = 0;
+        let timerInterval;
+        let pauseCount = 0;
+
+        const matchTimeDisplay = document.getElementById('match-time');
+        const pauseCountDisplay = document.getElementById('pause-count');
+        const startButton = document.getElementById('start-button');
+        const pauseButton = document.getElementById('pause-button');
+
+        startButton.addEventListener('click', () => {
+            if (!timerInterval) {
+                timerInterval = setInterval(() => {
+                    matchTime++;
+                    const minutes = String(Math.floor(matchTime / 60)).padStart(2, '0');
+                    const seconds = String(matchTime % 60).padStart(2, '0');
+                    matchTimeDisplay.textContent = `${minutes}:${seconds}`;
+                }, 1000);
+            }
+        });
+
+        pauseButton.addEventListener('click', () => {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                pauseCount++;
+                pauseCountDisplay.textContent = pauseCount;
+            }
+        });
+
+        // Form submission
+        document.getElementById('player-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                type: "playerData",
+                name: document.getElementById('player-name').value,
+                number: document.getElementById('player-number').value,
+                playTime: document.getElementById('play-time').value,
+                score: document.getElementById('score').value || 0,
+                assist: document.getElementById('assist').value || 0,
+                intercept: document.getElementById('intercept').value || 0,
+                turnover: document.getElementById('turnover').value || 0,
+                turnoverNon: document.getElementById('turnover-non').value || 0,
+                drop: document.getElementById('drop').value || 0,
+                dropNon: document.getElementById('drop-non').value || 0
+            };
+
+            try {
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    document.getElementById('message').textContent = 'Player data submitted successfully!';
+                    document.getElementById('player-form').reset();
+                } else {
+                    document.getElementById('message').textContent = 'Error submitting player data.';
+                }
+            } catch (error) {
+                document.getElementById('message').textContent = 'Error submitting player data.';
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
